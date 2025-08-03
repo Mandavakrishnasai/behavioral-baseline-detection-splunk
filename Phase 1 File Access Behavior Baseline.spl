@@ -1,0 +1,9 @@
+index="insider_ueba"   event="file_access"
+| bucket _time span=1h
+| stats count as file_access_count by _time, user
+| sort 0 user _time
+| streamstats window=24 current=f avg(file_access_count) as baseline by user
+| eval deviation = abs(file_access_count - baseline)
+| eval percent_dev = round((deviation / (baseline+1)) * 100, 2)
+| where percent_dev > 100
+| table _time user file_access_count baseline deviation percent_dev

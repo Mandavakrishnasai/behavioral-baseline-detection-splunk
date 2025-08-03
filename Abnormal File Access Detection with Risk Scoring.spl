@@ -1,0 +1,21 @@
+index="insider_ueba"  
+| bucket _time span=1h
+| stats count as file_access_count by _time, user, extracted_host
+| sort 0 user _time
+| streamstats window=24 current=f avg(file_access_count) as baseline by user
+| eval deviation = abs(file_access_count - baseline)
+| eval percent_dev = round((deviation / (baseline+1)) * 100, 2)
+| eval z_score = (file_access_count - baseline) / if(baseline > 0, baseline, 1)
+
+| eval extracted_host = lower(trim(extracted_host))
+| lookup assetueba host AS extracted_host OUTPUT criticality
+
+| lookup user_group_lookup user OUTPUT group
+| eventstats avg(file_access_count) as dept_avg by group, _time
+| eventstats latest(dept_avg) as peer_avg by user
+| eval peer_dev = abs(file_access_count - peer_avg)
+
+| eval risk_score = (percent_dev * 0.5) + (z_score * 10) + if(criticality="High", 20, 0)
+| where risk_score > 50
+| table _time user file_access_count baseline deviation percent_dev z_score peer_dev criticality risk_score
+| sort - risk_score

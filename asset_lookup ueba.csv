@@ -1,0 +1,7 @@
+host,asset_tag,asset_type,criticality
+eng01,ENG_SERVER,App,Medium
+dev01,DEV_SERVER,Dev,Low
+fin01,FIN_SERVER,DB,High
+hr01,HR_SERVER,File,Medium
+it01,IT_SERVER,Infra,High
+prod01,PROD_SERVER,Production,High

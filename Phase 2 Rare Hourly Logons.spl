@@ -1,0 +1,7 @@
+index="insider_ueba" 
+| eval hour=strftime(_time, "%H")
+| stats count as logon_count by user, hour
+| eventstats avg(logon_count) as baseline by user
+| eval anomaly = if(logon_count > baseline*2, 1, 0)
+| where anomaly=1
+| table user hour logon_count baseline
